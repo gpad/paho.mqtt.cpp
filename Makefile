@@ -66,7 +66,7 @@ endif
 
 CPPFLAGS += $(addprefix -D,$(DEFS)) $(addprefix -I,$(INC_DIRS))
 
-LIB_DEPS += c stdc++ pthread 
+LIB_DEPS += c stdc++ pthread
 
 LIB_DEP_FLAGS += $(addprefix -l,$(LIB_DEPS))
 
@@ -122,6 +122,25 @@ clean:
 distclean: clean
 	$(QUIET) rm -rf $(OBJ_DIR) $(LIB_DIR)
 
+libdir = /usr/local/lib
+includedir = /usr/local/include
+
+install: all
+	install -m 644 $(LIB_DIR)/$(LIB) $(libdir)
+	ln -s $(libdir)/$(LIB) $(libdir)/$(LIB_MAJOR_LINK)
+	ln -s $(libdir)/$(LIB) $(libdir)/$(LIB_LINK)
+	/sbin/ldconfig /usr/local/lib
+	mkdir -p $(includedir)/mqtt
+	install -m 644 src/mqtt/* $(includedir)/mqtt
+
+
+uninstall:
+	rm $(libdir)/$(LIB)
+	rm $(libdir)/$(LIB_MAJOR_LINK)
+	rm $(libdir)/$(LIB_LINK)
+	/sbin/ldconfig /usr/local/lib
+	rm -rf $(includedir)/mqtt
+
 # ----- Header dependencies -----
 
 MKG := $(findstring $(MAKECMDGOALS),"clean distclean dump")
@@ -134,4 +153,3 @@ $(OBJ_DIR)/%.dep: %.cpp
 	$(QUIET) $(CXX) -M $(CPPFLAGS) $(CXXFLAGS) $< > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,$$(OBJ_DIR)/\1.o $@ : ,g' < $@.$$$$ > $@; \
 	$(RM) $@.$$$$
-

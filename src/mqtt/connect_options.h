@@ -1,20 +1,20 @@
 /////////////////////////////////////////////////////////////////////////////
-/// @file connect_options.h 
-/// Declaration of MQTT connect_options class 
-/// @date May 1, 2013 
-/// @author Frank Pagliughi 
-/////////////////////////////////////////////////////////////////////////////  
+/// @file connect_options.h
+/// Declaration of MQTT connect_options class
+/// @date May 1, 2013
+/// @author Frank Pagliughi
+/////////////////////////////////////////////////////////////////////////////
 
 /*******************************************************************************
  * Copyright (c) 2013 Frank Pagliughi <fpagliughi@mindspring.com>
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
- * and Eclipse Distribution License v1.0 which accompany this distribution. 
+ * and Eclipse Distribution License v1.0 which accompany this distribution.
  *
- * The Eclipse Public License is available at 
+ * The Eclipse Public License is available at
  *    http://www.eclipse.org/legal/epl-v10.html
- * and the Eclipse Distribution License is available at 
+ * and the Eclipse Distribution License is available at
  *   http://www.eclipse.org/org/documents/edl-v10.php.
  *
  * Contributors:
@@ -38,16 +38,18 @@ namespace mqtt {
 
 class async_client;
 
-/////////////////////////////////////////////////////////////////////////////  
+/////////////////////////////////////////////////////////////////////////////
 
 /**
- * Holds the set of options that control how the client connects to a 
- * server. 
+ * Holds the set of options that control how the client connects to a
+ * server.
  */
 class connect_options
 {
 	/** The underlying C connection options */
 	MQTTAsync_connectOptions opts_;
+	std::string _password;
+	std::string _username;
 
 	/** The client has special access */
 	friend class async_client;
@@ -62,29 +64,29 @@ public:
 	 */
 	connect_options() : opts_( MQTTAsync_connectOptions_initializer ) {}
 	/**
-	 * Returns the connection timeout value. 
-	 * @return int 
+	 * Returns the connection timeout value.
+	 * @return int
 	 */
 	int get_connection_timeout() const;
 
 	//java.util.Properties getDebug()
-           
+
 	/**
 	 * Returns the "keep alive" interval.
-	 * @return int 
+	 * @return int
 	 */
 	int get_keep_alive_interval() const {
 		return opts_.keepAliveInterval;
 	}
 	/**
 	 * Returns the password to use for the connection.
-	 * @return std::string 
+	 * @return std::string
 	 */
 	std::string get_password() const {
 		return std::string(opts_.password);
 	}
 	/**
-	 * Returns the socket factory that will be used when connecting, or null 
+	 * Returns the socket factory that will be used when connecting, or null
 	 * if one has not been set.
 	 */
 	//javax.net.SocketFactory get_socket_factory();
@@ -94,45 +96,45 @@ public:
 	//java.util.Properties get_ssl_properties();
 	/**
 	 * Returns the user name to use for the connection.
-	 * @return std::string 
+	 * @return std::string
 	 */
-	std::string get_user_name() const { 
+	std::string get_user_name() const {
 		return std::string(opts_.username);
 	}
 	/**
 	 * Returns the topic to be used for last will and testament (LWT).
-	 * @return std::string 
+	 * @return std::string
 	 */
 	std::string get_will_destination() const;
 	/**
 	 * Returns the message to be sent as last will and testament (LWT).
-	 * @return MqttMessage 
+	 * @return MqttMessage
 	 */
 	message get_will_message() const;
 	/**
-	 * Returns whether the server should remember state for the client 
+	 * Returns whether the server should remember state for the client
 	 * across reconnects.
-	 * @return bool 
+	 * @return bool
 	 */
 	bool is_clean_session() const { return opts_.cleansession != 0; }
 	/**
-	 * Sets whether the server should remember state for the client across 
-	 * reconnects. 
-	 * @param cleanSession 
+	 * Sets whether the server should remember state for the client across
+	 * reconnects.
+	 * @param cleanSession
 	 */
 	void set_clean_session(bool cleanSession) {
 		opts_.cleansession = (cleanSession) ? (!0) : 0;
 	}
 	/**
 	 * Sets the connection timeout value.
-	 * @param timeout 
+	 * @param timeout
 	 */
 	void set_connection_timeout(int timeout) {
 		opts_.connectTimeout = timeout;
 	}
 	/**
-	 * Sets the "keep alive" interval. 
-	 * @param keepAliveInterval 
+	 * Sets the "keep alive" interval.
+	 * @param keepAliveInterval
 	 */
 	void set_keep_alive_interval(int keepAliveInterval) {
 		opts_.keepAliveInterval = keepAliveInterval;
@@ -140,7 +142,10 @@ public:
 	/**
 	 * Sets the password to use for the connection.
 	 */
-	void set_password(const std::string& password);
+	void set_password(const std::string& password) {
+		_password = password;
+		opts_.password = &_password[0];
+	}
 	/**
 	 * Sets the SocketFactory to use.
 	 */
@@ -151,35 +156,38 @@ public:
 	//void set_ssl_properties(java.util.Properties props);
 	/**
 	 * Sets the user name to use for the connection.
-	 * @param userName 
+	 * @param userName
 	 */
-	void set_user_name(const std::string& userName);
+	void set_user_name(const std::string& userName){
+		_username = userName;
+		opts_.username = &_username[0];
+	}
 	/**
 	 * Sets the "Last Will and Testament" (LWT) for the connection.
-	 * @param top 
-	 * @param payload 
-	 * @param n 
-	 * @param qos 
-	 * @param retained 
+	 * @param top
+	 * @param payload
+	 * @param n
+	 * @param qos
+	 * @param retained
 	 */
 	void set_will(const topic& top, void* payload, size_t n, int qos, bool retained) {
 		set_will(top.get_name(), payload, n, qos, retained);
 	}
 	/**
 	 * Sets the "Last Will and Testament" (LWT) for the connection.
-	 * @param top 
-	 * @param payload 
-	 * @param n 
-	 * @param qos 
-	 * @param retained 
+	 * @param top
+	 * @param payload
+	 * @param n
+	 * @param qos
+	 * @param retained
 	 */
 	void set_will(const std::string& top, void* payload, size_t n, int qos, bool retained);
 	/**
-	 * Sets up the will information, based on the supplied parameters. 
-	 * @param top 
-	 * @param msg 
-	 * @param qos 
-	 * @param retained 
+	 * Sets up the will information, based on the supplied parameters.
+	 * @param top
+	 * @param msg
+	 * @param qos
+	 * @param retained
 	 */
 	/*protected*/ void set_will(const std::string& top, message msg, int qos, bool retained);
 
@@ -196,4 +204,3 @@ typedef connect_options::ptr_t connect_options_ptr;
 }
 
 #endif		// __mqtt_connect_options_h
-
